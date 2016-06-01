@@ -383,16 +383,16 @@ if __name__ == "__main__":
         print f/1e6
         #sys.stdout.flush()
         ecdfD=ECDF(Ds)
-    x=[1000,2000,3500,6000]
+    x=[1,2,3.5,6]
     #x=[r'$\stackrel{500}{%.1f}$'%(a_EUT*2*pi*500*1e6/c),r'$\stackrel{2000}{%.1f}$'%(a_EUT*2*pi*2000*1e6/c),r'$\stackrel{3500}{%.1f}$'%(a_EUT*2*pi*3500*1e6/c),r'$\stackrel{6000}{%.1f}$'%(a_EUT*2*pi*6000*1e6/c)]   
     #pylab.plot(deval, [FD_hertz_one_cut(d) for d in deval], label="Theoretical CDF (a=0 m)")
     #pylab.plot(deval, [FD_hertz_one_cut_costheta(d) for d in deval], label="Theoretical CDF cos(theta)(a=0 m)")
-    labels = [r'$\stackrel{1000}{%.1f}$'%(a_EUT*2*pi*1000*1e6/c),r'$\stackrel{2000}{%.1f}$'%(a_EUT*2*pi*2000*1e6/c),r'$\stackrel{3500}{%.1f}$'%(a_EUT*2*pi*3500*1e6/c),r'$\stackrel{6000}{%.1f}$'%(a_EUT*2*pi*6000*1e6/c)]
+    labels = [r'$\stackrel{1}{%.1f}$'%(a_EUT*2*pi*1000*1e6/c),r'$\stackrel{2}{%.1f}$'%(a_EUT*2*pi*2000*1e6/c),r'$\stackrel{3.5}{%.1f}$'%(a_EUT*2*pi*3500*1e6/c),r'$\stackrel{6}{%.1f}$'%(a_EUT*2*pi*6000*1e6/c)]
     fig, ax = plt.subplots()
     fig.canvas.draw()
     
     ax.xaxis.set_ticks(x)
-    plt.plot(freqs/1e6,D_max_var_list, 'r+-',label="$var(D_{max}^{R})$")
+    plt.plot(freqs/1e9,D_max_var_list, 'r+-',label="$var(D_{max}^{R})$")
     ax.set_xticklabels(labels,verticalalignment="top")
     ax.set_ylim((-1,4))
     #pylab.axis([freqs[0]/1e6,freqs[-1]/1e6,1,4])

@@ -381,24 +381,24 @@ if __name__ == "__main__":
         print f/1e6
         #sys.stdout.flush()
         ecdfD=ECDF(Ds)
-    x=[1000,2000,3500,6000]
+    x=[1,2,3.5,6]
     #x=[r'$\stackrel{500}{%.1f}$'%(a_EUT*2*pi*500*1e6/c),r'$\stackrel{2000}{%.1f}$'%(a_EUT*2*pi*2000*1e6/c),r'$\stackrel{3500}{%.1f}$'%(a_EUT*2*pi*3500*1e6/c),r'$\stackrel{6000}{%.1f}$'%(a_EUT*2*pi*6000*1e6/c)]   
     #pylab.plot(deval, [FD_hertz_one_cut(d) for d in deval], label="Theoretical CDF (a=0 m)")
     #pylab.plot(deval, [FD_hertz_one_cut_costheta(d) for d in deval], label="Theoretical CDF cos(theta)(a=0 m)")
-    labels = [r'$\stackrel{1000}{%.1f}$'%(a_EUT*2*pi*1000*1e6/c),r'$\stackrel{2000}{%.1f}$'%(a_EUT*2*pi*2000*1e6/c),r'$\stackrel{3500}{%.1f}$'%(a_EUT*2*pi*3500*1e6/c),r'$\stackrel{6000}{%.1f}$'%(a_EUT*2*pi*6000*1e6/c)]
+    labels = [r'$\stackrel{1}{%.1f}$'%(a_EUT*2*pi*1000*1e6/c),r'$\stackrel{2}{%.1f}$'%(a_EUT*2*pi*2000*1e6/c),r'$\stackrel{3.5}{%.1f}$'%(a_EUT*2*pi*3500*1e6/c),r'$\stackrel{6}{%.1f}$'%(a_EUT*2*pi*6000*1e6/c)]
     fig, ax = plt.subplots()
     fig.canvas.draw()
     
     ax.xaxis.set_ticks(x)
-    plt.plot(freqs/1e6,D_max_list, 'r+-')
+    plt.plot(freqs/1e9,D_max_list, 'r+-')
     ax.set_xticklabels(labels,verticalalignment="top")
     ax.set_ylim((2.5,4))
     #pylab.axis([freqs[0]/1e6,freqs[-1]/1e6,1,4])
     plt.grid()
 #    plt.legend(loc=4)
     plt.xlabel(r'$\stackrel{f/GHz}{ka}$')
-    plt.ylabel("$D_{max}^{R}$")
-    plt.title("$N_{dipoles}=%d$, MC runs=%d, $a_{EUT}=%.4f m$, $R=%d m$"%(N_dipole,N_MC,a_EUT,distance))
+    plt.ylabel("$<D_{max}^{R}>$")
+    plt.title("$N_{dipoles}=%d$, MC runs=%d, $a_{EUT}=%.4fm$, $R=%dm$"%(N_dipole,N_MC,a_EUT,distance))
    # plt.show()
     fig = matplotlib.pyplot.gcf()
     fig.set_size_inches(18.5, 10.5)

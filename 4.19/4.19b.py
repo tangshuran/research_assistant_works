@@ -334,7 +334,7 @@ if __name__ == "__main__":
     import sys
     
     distance = 10  # measurement distance
-    a_EUT=0.5# radius of EUT
+    a_EUT=0.2693# radius of EUT
     N_dipole = 30    # number of random dipoles
     N_obs_points_list=numpy.linspace(1,30,30)#number of observation points (randomly distributed) on Ring around EUT
     N_MC=1000     # number of MC runs -> average over different random configurations
@@ -383,13 +383,13 @@ if __name__ == "__main__":
         #pylab.plot(deval, [FD_hertz_one_cut(d) for d in deval], label="Theoretical CDF (a=0 m)")
         #pylab.plot(deval, [FD_hertz_one_cut_costheta(d) for d in deval], label="Theoretical CDF cos(theta)(a=0 m)")
         pylab.figure(1)
-        pylab.plot(N_obs_points_list,D_max_list, '%s+-'%clr, label="f=%d MHz"%(f/1e6))
+        pylab.plot(N_obs_points_list,D_max_list, '%s+-'%clr, label="f= %dGHz"%(f/1e9))
     pylab.axis([N_obs_points_list[0],N_obs_points_list[-1],1,4])
     pylab.grid()
     pylab.legend(loc=4)
     pylab.xlabel("$N_{dipoles}$")
-    pylab.ylabel("$D_{max}^{R}$")
-    pylab.title(" MC runs=%d, $a_{EUT}=%.4f m$, $R=%d m$"%(N_MC,a_EUT,distance))
+    pylab.ylabel("$<D_{max}^{R}>$")
+    pylab.title(" MC runs=%d, $a_{EUT}=%.4fm$, $R=%dm$"%(N_MC,a_EUT,distance))
     #pylab.show()
     fig = matplotlib.pyplot.gcf()
     fig.set_size_inches(18.5, 10.5)
