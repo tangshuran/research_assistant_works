@@ -13,12 +13,10 @@ from cmath import *
 import cmath
 import cPickle
 from matplotlib import rc, rcParams
-import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import pylab
 import sys
 import matplotlib
-import time
 c=299792458.
 pi=numpy.pi
 mu0=4*pi*1e-7
@@ -338,10 +336,10 @@ if __name__ == "__main__":
     distance = 10  # measurement distance
     a_EUT=0.2693# radius of EUT
     N_dipole = 10    # number of random dipoles
-    N_obs_points=360 #number of observation points (randomly distributed) on Ring around EUT
-    N_MC=15    # number of MC runs -> average over different random configurations
-    freqs=numpy.array([1000])*1e6#[30,50,80,100,150, 200,250, 300,350, 400,450, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500])*1e6#numpy.array(range(30,301,30))*1000000#numpy.logspace(10,11,3)  # generate frequencies
-    kas=a_EUT*2*pi*freqs/c#kas=a_EUTs*2*pi*freqs/c # vector with k*a values (a: EUT radius)
+    N_obs_points=40 #number of observation points (randomly distributed) on Ring around EUT
+    N_MC_list=[10,50,200,1000,2000]     # number of MC runs -> average over different random configurations
+    f=1000*1e6#[30,50,80,100,150, 200,250, 300,350, 400,450, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500])*1e6#numpy.array(range(30,301,30))*1000000#numpy.logspace(10,11,3)  # generate frequencies
+    ka=a_EUT*2*pi*f/c#kas=a_EUTs*2*pi*freqs/c # vector with k*a values (a: EUT radius)
     deval=numpy.linspace(1,8,100)
     Ns=Ns_hansen_1D
     n_listen=0
@@ -350,15 +348,14 @@ if __name__ == "__main__":
     #[palist,direc,dpnrlist,EUTlist]=load_padirec(N_dipole*N_MC)
     #print len(palist), len(direc),len(dpnrlist),len(EUTlist)
     colors=cycle('bgrcmkwy')
-    for f,ka,clr in zip(freqs,kas,colors):   # loop frequencies, kas
+    for N_MC,clr in zip(N_MC_list,colors):   # loop frequencies, kas
         #f=300*1e6
         #ka=a_EUT*2*pi*f/c
         [rs,phiwinkel,theta]=R_notrand(N_obs_points, distance, theta=0.5*pi,zoffset=0)#1.5) # generate not random observation points 
         Ds=[] # to store the directivities of the MC runs at this freq
-        Es2list=[]
+        Eslist=[]
         Rsum=[]
         Psum=[]
-        Emags2_sum=numpy.array(numpy.zeros(360))
         n_listen=0
         for mc in range(N_MC): # MC loop
             p=p_rand(N_dipole, pmax=1e-8)   # generate vector with random dipole moments
@@ -371,35 +368,30 @@ if __name__ == "__main__":
             av=sum(Emags2)/N_obs_points # the average of |E|**2
             ma=max(Emags2) # the maximum of |E|**2
             D=ma/av # directivity
-            print f,mc
+            print mc, ma, av, D
             Ds.append(D)
-            Emags2_sum=numpy.add(Emags2_sum,Emags2)
+            Eslist.append(Es)
              
-        Ephi2_divide_Emax2=numpy.divide(Emags2_sum/N_MC,max(Emags2_sum/N_MC))
+        ED=EDmax_hansen(ka, mu=1., Ns=Ns)
         #print    
         #print f, ka, sum(Ds)/N_MC, ED
         #print
-        #sys.stdout.flush()
-        #ecdfD=ECDF(Ds)
-        #pylab.figure(1)
-        #pylab.plot(deval,ecdfD(deval), '%s+-'%clr, label="ECDF (Dipoles),ka=%.2f m,f=%d MHz"%(ka,f/1e6))
+        sys.stdout.flush()
+        ecdfD=ECDF(Ds)
+        pylab.figure(1)
+        pylab.plot(deval,ecdfD(deval), '%s+-'%clr, label="ECDF (Dipoles),N_MC=%d"%(N_MC))
     #pylab.plot(deval, [FD_hertz_one_cut(d) for d in deval], label="Theoretical CDF (a=0 m)")
     #pylab.plot(deval, [FD_hertz_one_cut_costheta(d) for d in deval], label="Theoretical CDF cos(theta)(a=0 m)")
-    ax = plt.subplot(111, projection='polar')
-    ax.plot(phiwinkel, Ephi2_divide_Emax2, color='g', linewidth=1,label=r'$\frac{E(\varphi)^{2}}{E_{max}^{2}}$')
-    ax.legend(loc=4)
-    ax.set_rmax(1.0)
-    ax.grid(True)
-    max_angle=max(numpy.where(Ephi2_divide_Emax2==1.0,phiwinkel,0))
-    ax.set_title(r"$f=%d Ghz,N_{dipoles}=%d$, MC runs=%d, $N_{obs}=%d$, $R=%d m$,$a_{EUT}$=%.4f m,\varphi_{max}=%.1f^{\circ}$"%(f/1e9,N_dipole,N_MC,N_obs_points,distance,a_EUT,degrees(max_angle)),y=1.08)
-    #pylab.legend(loc=4)
-    #pylab.xlabel("Max. Directivity D")
-    #pylab.ylabel("CDF")
-    #pylab.title("$N_{dipoles}=%d$, MC runs=%d, $N_{obs}=%d$, $R=%d m$,$a_{EUT}$=%d m"%(N_dipole,N_MC,N_obs_points,distance,a_EUT))
-    #plt.show()
-    time.sleep(2)
+    pylab.axis([deval[0],deval[-1],0,1])
+    pylab.grid()
+    pylab.legend(loc=4)
+    pylab.xlabel("Max. Directivity D")
+    pylab.ylabel("CDF")
+    pylab.title("$N_{dipoles}=%d$, $N_{obs}=%d$, $R=%d m$, $a_{EUT}$=%.4f m, f=%d GHz"%(N_dipole,N_obs_points,distance,a_EUT,f/1e9))
+    #pylab.show()
     fig = matplotlib.pyplot.gcf()
-    fig.set_size_inches(18.5, 12.5)
-    pp = PdfPages(r'D:\HIWI\python-script\new_new_results\4.12/result_1.pdf')
-    plt.savefig(pp, format='pdf',dpi=fig.dpi, bbox_inches='tight')
+    fig.set_size_inches(18.5, 10.5)
+    pp = PdfPages(r'D:\HIWI\python-script\new_new_results\4.13/result_c.pdf')
+    pylab.savefig(pp, format='pdf',dpi=fig1.dpi, bbox_inches='tight')
     pp.close()
+

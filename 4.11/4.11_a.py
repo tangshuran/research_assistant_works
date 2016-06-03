@@ -380,16 +380,17 @@ if __name__ == "__main__":
     N_dipole = 10    # number of random dipoles
     N_obs=100 #4m / 2 *pi * R
     deltah_list=[3,3,5]
-    x=[1,2,3.5,6]
+    x=[1,2,3,4,5,6]
     #x=[r'$\stackrel{500}{%.1f}$'%(a_EUT*2*pi*500*1e6/c),r'$\stackrel{2000}{%.1f}$'%(a_EUT*2*pi*2000*1e6/c),r'$\stackrel{3500}{%.1f}$'%(a_EUT*2*pi*3500*1e6/c),r'$\stackrel{6000}{%.1f}$'%(a_EUT*2*pi*6000*1e6/c)]   
     #pylab.plot(deval, [FD_hertz_one_cut(d) for d in deval], label="Theoretical CDF (a=0 m)")
     #pylab.plot(deval, [FD_hertz_one_cut_costheta(d) for d in deval], label="Theoretical CDF cos(theta)(a=0 m)")
-    labels = [r'$\stackrel{1}{%.1f}$'%(a_EUT*2*pi*1000*1e6/c),r'$\stackrel{2}{%.1f}$'%(a_EUT*2*pi*2000*1e6/c),r'$\stackrel{3.5}{%.1f}$'%(a_EUT*2*pi*3500*1e6/c),r'$\stackrel{6}{%.1f}$'%(a_EUT*2*pi*6000*1e6/c)]
+    labels = [r'$\stackrel{1}{%.1f}$'%(a_EUT*2*pi*1000*1e6/c),r'$\stackrel{2}{%.1f}$'%(a_EUT*2*pi*2000*1e6/c),r'$\stackrel{3}{%.1f}$'%(a_EUT*2*pi*3000*1e6/c),r'$\stackrel{4}{%.1f}$'%(a_EUT*2*pi*4000*1e6/c),r'$\stackrel{5}{%.1f}$'%(a_EUT*2*pi*5000*1e6/c),r'$\stackrel{6}{%.1f}$'%(a_EUT*2*pi*6000*1e6/c)]
     fig, ax = plt.subplots()
     fig.canvas.draw()
     ax.xaxis.set_ticks(x)
     
     ax.set_xticklabels(labels,verticalalignment="top")
+    ax.tick_params(direction='out', pad=5)
     ax.set_ylim((0,4))
     #pylab.axis([freqs[0]/1e6,freqs[-1]/1e6,1,4])
     plt.grid()
@@ -478,7 +479,7 @@ if __name__ == "__main__":
                 av=sum(Emags2)/N_obs_points_K # the average of |E|**2
                 ma=max(Emags2) # the maximum of |E|**2
                 D=ma/av # directivity
-                print mc, ma, av, D
+                #print mc, ma, av, D
                 Ds_K.append(D)
                 Es2_av_list_K.append(av)
             y_value=4*np.mean(Ds_K)/(np.mean(Es2_max_list_Z)/np.mean(Es2_av_list_K))  
@@ -486,10 +487,10 @@ if __name__ == "__main__":
             #print    
             #print f, distance,deltah
             #print
-        plt.plot(freqs/1e9,y_value_list, '%s+-'%clr,label="R=%d ,$\Delta h$=%d"%(distance,deltah))
+        plt.plot(freqs/1e9,y_value_list, '%s+-'%clr,label="R=%dm,$\Delta h$=%dm"%(distance,deltah))
 
-#    plt.legend(loc=4)
-    plt.xlabel(r'$\stackrel{f/GHz}{ka}$')
+    plt.legend(loc=4)
+    plt.xlabel(r'$\stackrel{f/GHz}{ka}$',fontsize=20,labelpad=10)
     plt.ylabel(r"$\frac{4<D^{K}_{max}>}{<E^{Z^{2}}_{max}/E^{K^{2}}>}$")
     plt.title("$N_{dipoles}=%d$, MC runs=%d, $a_{EUT}=%.4fm$"%(N_dipole,N_MC,a_EUT))
     #pylab.show()
