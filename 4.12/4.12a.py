@@ -37,7 +37,7 @@ params = {#'backend': 'ps',
                     'font.serif': 'serif', 
                     'axes.titlesize': fontsize,
                     'axes.labelsize': fontsize,
-                    'text.fontsize': fontsize,
+                    'font.size': fontsize,
                     'legend.fontsize': fontsize*0.8,
                     'xtick.labelsize': int(fontsize*0.8),
                     'ytick.labelsize': int(fontsize*0.8),
@@ -334,9 +334,9 @@ def calcEmags2(Es,phi,th):
 if __name__ == "__main__":
     import pylab
     import sys
-    
+    output_data=[]
     distance = 10  # measurement distance
-    a_EUT=0.2693# radius of EUT
+    a_EUT=0.27# radius of EUT
     N_dipole = 10    # number of random dipoles
     N_obs_points=360 #number of observation points (randomly distributed) on Ring around EUT
     N_MC=15    # number of MC runs -> average over different random configurations
@@ -391,15 +391,18 @@ if __name__ == "__main__":
     ax.set_rmax(1.0)
     ax.grid(True)
     max_angle=max(numpy.where(Ephi2_divide_Emax2==1.0,phiwinkel,0))
-    ax.set_title(r"$f=%d Ghz,N_{dipoles}=%d$, MC runs=%d, $N_{obs}=%d$, $R=%d m$,$a_{EUT}$=%.4f m,\varphi_{max}=%.1f^{\circ}$"%(f/1e9,N_dipole,N_MC,N_obs_points,distance,a_EUT,degrees(max_angle)),y=1.08)
+    ax.set_title(r"$f=%d GHz,N_{dipoles}=%d$, MC runs=%d, $N_{obs}=%d$, $R=%d m$,$a_{EUT}$=%.2f m,\varphi_{max}=%.1f^{\circ}$"%(f/1e9,N_dipole,N_MC,N_obs_points,distance,a_EUT,degrees(max_angle)),y=1.08)
     #pylab.legend(loc=4)
     #pylab.xlabel("Max. Directivity D")
     #pylab.ylabel("CDF")
     #pylab.title("$N_{dipoles}=%d$, MC runs=%d, $N_{obs}=%d$, $R=%d m$,$a_{EUT}$=%d m"%(N_dipole,N_MC,N_obs_points,distance,a_EUT))
     #plt.show()
-    time.sleep(2)
+    #time.sleep(2)
+    output=Ephi2_divide_Emax2
+    numpy.savetxt(r"D:\HIWI\python-script\new_new_results\4.12/4.12a.dat", output, fmt=['%.6f'])
     fig = matplotlib.pyplot.gcf()
     fig.set_size_inches(18.5, 12.5)
-    pp = PdfPages(r'D:\HIWI\python-script\new_new_results\4.12/result_1.pdf')
+    pp = PdfPages(r'D:\HIWI\python-script\new_new_results\4.12/result_2.pdf')
     plt.savefig(pp, format='pdf',dpi=fig.dpi, bbox_inches='tight')
     pp.close()
+    

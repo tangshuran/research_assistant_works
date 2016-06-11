@@ -1,0 +1,1 @@
+frequence/1e9;y value 1;y value 2; y value 3; 

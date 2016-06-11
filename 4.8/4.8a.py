@@ -454,4 +454,6 @@ if __name__ == "__main__":
     pp = PdfPages(r'D:\HIWI\python-script\new_new_results\4.8/result_a.pdf')
     pylab.savefig(pp, format='pdf',dpi=fig.dpi, bbox_inches='tight')
     pp.close()
+    output=Es2_ratio
+    numpy.savetxt(r"D:\HIWI\python-script\new_new_results\4.8/4.8a.dat", output, fmt=['%.6f'])
 

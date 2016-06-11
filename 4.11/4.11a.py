@@ -15,6 +15,8 @@ from matplotlib.backends.backend_pdf import PdfPages
 import pylab
 import sys
 import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
 c=299792458.
 pi=numpy.pi
 mu0=4*pi*1e-7
@@ -197,7 +199,41 @@ def p_rand (N, pmax=1., fix_amplitude=None):
     #print xyz
     
     return xyz
+def R_Kugel(N,distance,zoffset=0):
+    """
+    returns array of N random vectors on a sphere
+    """
+    
+    thetaphilist=[]
+    thetas=[]
+    phis=[]
+    thetas.append(0)
+    phis.append(0)
+    #thetaphilist.append([0,0])
+    phiminus1=0.0
+    for k in (numpy.array(range(N-2))+2):
+    
+        hk=-1.0+2.0*(k-1)/(N-1)
+        #print hk
+        theta=numpy.arccos(hk)
+        #print hk
 
+        phi=numpy.mod(phiminus1+3.6/numpy.sqrt(N)/numpy.sqrt(1-hk**2),2*numpy.pi)
+        #print phi
+        phiminus1=phi
+        #thetaphilist.append([phi,theta])
+        thetas.append(theta)
+        phis.append(phi)
+        #thetaphilist.append([0,numpy.pi])    
+        #thetas.append(numpy.pi)
+        #phis.append(0)
+        
+    thetas=numpy.array(thetas)
+    phis=numpy.array(numpy.real(phis))
+        #print thetas,phis
+    xyz=(numpy.array([distance*numpy.sin(thetas)*numpy.cos(phis),distance*numpy.sin(thetas)*numpy.sin(phis),distance*numpy.cos(thetas)+zoffset])).T
+        #print xyz
+    return [xyz,phis,thetas]
 def R_rand (N, a=1., theta=None, rand_a=False,zoffset=0):
     """
     returns array of N random vectors (Rx,Ry,Rz)
@@ -320,18 +356,7 @@ def load_padirec(anz):
     f.close()
     #print pa,direc,dpnr,EUTlist
     return [pa,direc,dpnr,EUTlist]
-def remove_nan(seq):
-    not_nan=10000
-    clean_seq=[]   
-    for i,v in enumerate(seq):
-        if str(v)!="nan":
-            not_nan=i
-            clean_seq.append(v)
-        elif i<not_nan:
-            clean_seq.append(0)
-        else:
-            clean_seq.append(1)
-    return clean_seq
+
 def calcEmags2(Es,phi,th):
     
     hfaktor=(numpy.array([-numpy.sin(th)*numpy.sin(phi),
@@ -350,11 +375,25 @@ if __name__ == "__main__":
     import pylab
     import sys
     output_data=[]
-    distance_list = [3,10,30,30]  # measurement distance
-    a_EUT = 0.2693     # radius of EUT
+    distance_list = [3,10,30]  # measurement distance
+    a_EUT = 0.27     # radius of EUT
     N_dipole = 10    # number of random dipoles
     N_obs=100 #4m / 2 *pi * R
-    deltah_list=[3,3,3,5]
+    deltah_list=[3,3,5]
+    x=[1,2,3,4,5,6]
+    #x=[r'$\stackrel{500}{%.1f}$'%(a_EUT*2*pi*500*1e6/c),r'$\stackrel{2000}{%.1f}$'%(a_EUT*2*pi*2000*1e6/c),r'$\stackrel{3500}{%.1f}$'%(a_EUT*2*pi*3500*1e6/c),r'$\stackrel{6000}{%.1f}$'%(a_EUT*2*pi*6000*1e6/c)]   
+    #pylab.plot(deval, [FD_hertz_one_cut(d) for d in deval], label="Theoretical CDF (a=0 m)")
+    #pylab.plot(deval, [FD_hertz_one_cut_costheta(d) for d in deval], label="Theoretical CDF cos(theta)(a=0 m)")
+    labels = [r'$\stackrel{1}{%.1f}$'%(a_EUT*2*pi*1000*1e6/c),r'$\stackrel{2}{%.1f}$'%(a_EUT*2*pi*2000*1e6/c),r'$\stackrel{3}{%.1f}$'%(a_EUT*2*pi*3000*1e6/c),r'$\stackrel{4}{%.1f}$'%(a_EUT*2*pi*4000*1e6/c),r'$\stackrel{5}{%.1f}$'%(a_EUT*2*pi*5000*1e6/c),r'$\stackrel{6}{%.1f}$'%(a_EUT*2*pi*6000*1e6/c)]
+    fig, ax = plt.subplots()
+    fig.canvas.draw()
+    ax.xaxis.set_ticks(x)
+    
+    ax.set_xticklabels(labels,verticalalignment="top")
+    ax.tick_params(direction='out', pad=5)
+    ax.set_ylim((0,4))
+    #pylab.axis([freqs[0]/1e6,freqs[-1]/1e6,1,4])
+    plt.grid()
     #zoffset=1.0
     #print numpy.sqrt(2*pi*distance/deltah*500)
     
@@ -365,89 +404,102 @@ if __name__ == "__main__":
 
     data=[]
     N_MC=1000      # number of MC runs -> average over different random configurations
-    f=1000*1e6#freqs=numpy.array([1000000000])#,1000000000,1500000000])#range(30,301,30))*1000000#numpy.logspace(10,11,3)  # generate frequencies
-    ka=a_EUT*2*pi*f/c # vector with k*a values (a: EUT radius)
+    freqs=numpy.array(numpy.linspace(1000,6000,51))*1e6#freqs=numpy.array([1000000000])#,1000000000,1500000000])#range(30,301,30))*1000000#numpy.logspace(10,11,3)  # generate frequencies
+    kas=a_EUT*2*pi*freqs/c # vector with k*a values (a: EUT radius)
     deval=numpy.linspace(1,10,100)
     #print deval
-    output_data.append(deval)
-    n_listen=0
-    fig1=pylab.figure(1)                  
+  
+    n_listen=0                
     #[palist,direc,dpnrlist,EUTlist]=load_padirec(N_dipole*N_MC)
     colors=cycle('bgrcmk')
+    output_data.append(freqs/1e9)
     for distance,deltah,clr in zip(distance_list,deltah_list,colors):
-        upoints=int(round(numpy.sqrt(2*pi*distance/deltah*500)))
-        hpoints=int(round(float(N_obs)/upoints))
-        N_obs_points=[upoints,hpoints] 
-        N_obs=N_obs_points[0]*N_obs_points[1]
-        umfang= 2 * pi * distance#number of observation points [Winkel,Höhe]
-        # loop frequencies, kas
-        #Ma_Ds=calc_ds (N_dipole, N_MC, ka,
-        #               numpy.random.uniform(0.0,twopi,N_obs_points),
-        #               0.5*pi*numpy.ones(N_obs_points)) #np.arccos(np.random.uniform(-1.0,1.0,1e5))
-        #MCHansen_Ds=calc_ds_MCHansen(ka, N_MC, N_obs=N_obs_points, Ns=Ns)
-        [rs,phiwinkel,hoehe]=R_Zylinder(N_obs_points, distance,deltah)#1.5) # generate not random observation points 
-        #[rs,phiwinkel,hoehe]=R_notrand(N_obs_points[1], distance)#1.5) # generate not random observation points 
-        #rs=R_rand(N_obs_points, distance, theta=0.5*pi,zoffset=1.5) # generate random observation points 
-        
-
-        #wait
-        #print 'RS=',rs
-        Ds=[] # to store the directivities of the MC runs at this freq
-        Rsum=[]
-        Psum=[]
-        n_listen=0
-        for mc in range(N_MC): # MC loop
-            p=p_rand(N_dipole, pmax=1e-8)   # generate vector with random dipole moments
-            R=R_rand_oats(N_dipole, a=a_EUT,rand_a=False,zoffset=1)   # generate random dipole positions on EUT surface
-            Rsum.append(numpy.array([R.T[0],R.T[1],-R.T[2]]).T[0])
-            Rsum.append(R[0])
-            Psum.append(p[0])
-            pha=2*pi*numpy.random.random(N_dipole) # generate random phases
-            #phase=numpy.zeros(N_dipole)
-            #pylab.show()
-            #print 'p',p
-            Es=numpy.array([E_hertz_oats(r, p, R, pha, f, t=0, epsr=1.) for r in rs]) # calculate sum E-fields at obsevation points
-
-            Emags2=abs(numpy.array([numpy.dot(a,a) for a in Es]))  # |E|**2
-
-            av=sum(Emags2)/(N_obs_points[0]*N_obs_points[1]) # the average of |E|**2
-            ma=max(Emags2) # the maximum of |E|**2
-            D=ma/av # directivity
-            #print mc
-            Ds.append(D)
-             
-       
-        #print    
-        print f, distance,deltah
-        #print
-        
-        sys.stdout.flush()
-        ecdfD=ECDF(Ds)
-
-        pylab.figure(1)
-        pylab.plot(deval,ecdfD(deval), '%s+-'%clr, label="ECDF (Dipoles), R=%d ,$\Delta h$=%d,$N_{obs.}=%d$"%(distance,deltah,N_obs_points[0]*N_obs_points[1]))# the first curve
-        output_data.append(remove_nan(ecdfD(deval)))
-        #data=data.append(Ds)
-        xachs=deval
-        yachs=ecdfD(deval)
-        funcmap=0
-        funcmap=dict(progtype='python',modus='OATS',N_obs=N_obs, deltah=deltah, Ds=Ds, upoints=N_obs_points[0],hpoints=N_obs_points[1], N_dipole=N_dipole , euttype='Kugel',f=f ,N_MC=N_MC,xachs=xachs,yachs=yachs,a=a_EUT,R=distance,ka=ka)
-        print funcmap
-        name="daten/oats/OATS_{:.0f}dp_{:.0f}mc_{}Nobs_{}a_{}R_{:.0f}MHz_deltah{:}m.dmp".format(N_dipole,N_MC,N_obs_points,a_EUT,distance,f*1e-6,deltah)
-        print name
-
-    pylab.axis([deval[0],deval[-1],0,1])
-    pylab.grid()
-    pylab.legend(loc=4)
-    pylab.xlabel("Max. Directivity D")
-    pylab.ylabel("CDF")
-    pylab.title("$N_{dipoles}=%d$, a=%.4f, MC runs=%d,f=%d MHz"%(N_dipole,a_EUT,N_MC,f/1e6))
+        y_value_list=[]
+        for f,ka in zip(freqs,kas):
+           
+            upoints=int(round(numpy.sqrt(2*pi*distance/deltah*500)))
+            hpoints=int(round(float(N_obs)/upoints))
+            N_obs_points=[upoints,hpoints] 
+            N_obs=N_obs_points[0]*N_obs_points[1]
+            umfang= 2 * pi * distance#number of observation points [Winkel,Höhe]
+            # loop frequencies, kas
+            #Ma_Ds=calc_ds (N_dipole, N_MC, ka,
+            #               numpy.random.uniform(0.0,twopi,N_obs_points),
+            #               0.5*pi*numpy.ones(N_obs_points)) #np.arccos(np.random.uniform(-1.0,1.0,1e5))
+            #MCHansen_Ds=calc_ds_MCHansen(ka, N_MC, N_obs=N_obs_points, Ns=Ns)
+            [rs,phiwinkel,hoehe]=R_Zylinder(N_obs_points, distance,deltah)#1.5) # generate not random observation points 
+            #[rs,phiwinkel,hoehe]=R_notrand(N_obs_points[1], distance)#1.5) # generate not random observation points 
+            #rs=R_rand(N_obs_points, distance, theta=0.5*pi,zoffset=1.5) # generate random observation points 
+            
+    
+            #wait
+            #print 'RS=',rs
+            Ds_Z=[] # to store the directivities of the MC runs at this freq
+            Es2_max_list_Z=[]
+            Rsum=[]
+            Psum=[]
+            n_listen=0
+            print f/1e9,distance,deltah
+            for mc in range(N_MC): # MC loop
+                p=p_rand(N_dipole, pmax=1e-8)   # generate vector with random dipole moments
+                R=R_rand_oats(N_dipole, a=a_EUT,rand_a=False,zoffset=1)   # generate random dipole positions on EUT surface
+                Rsum.append(numpy.array([R.T[0],R.T[1],-R.T[2]]).T[0])
+                Rsum.append(R[0])
+                Psum.append(p[0])
+                pha=2*pi*numpy.random.random(N_dipole) # generate random phases
+                #phase=numpy.zeros(N_dipole)
+                #pylab.show()
+                #print 'p',p
+                Es=numpy.array([E_hertz_oats(r, p, R, pha, f, t=0, epsr=1.) for r in rs]) # calculate sum E-fields at obsevation points
+    
+                Emags2=abs(numpy.array([numpy.dot(a,a) for a in Es]))  # |E|**2
+    
+                av=sum(Emags2)/(N_obs_points[0]*N_obs_points[1]) # the average of |E|**2
+                ma=max(Emags2) # the maximum of |E|**2
+                D=ma/av # directivity
+                #print mc
+                Ds_Z.append(D)
+                Es2_max_list_Z.append(ma)
+                
+            N_obs_points_K=100    
+            [rs,phis,thetas]=R_Kugel(N_obs_points_K, distance)#1.5) # generate not random observation points 
+            Ds_K=[] # to store the directivities of the MC runs at this freq
+            Es2_av_list_K=[]
+            Rsum=[]
+            Psum=[]
+            n_listen=0
+            data=[]
+            for mc in range(N_MC): # MC loop
+                p=p_rand(N_dipole, pmax=1e-8)   # generate vector with random dipole moments
+                R=R_rand(N_dipole, a=a_EUT,rand_a=False,zoffset=0)   # generate random dipole positions on EUT surface
+                Rsum.append(R[0])
+                Psum.append(p[0])
+                pha=2*pi*numpy.random.random(N_dipole) # generate random phases
+                Es=numpy.array([E_hertz_far(r, p, R, pha, f, t=0, epsr=1.) for r in rs]) # calculate sum E-fields at obsevation points
+                Emags2=abs(numpy.array([numpy.dot(a,a) for a in Es]))     
+                av=sum(Emags2)/N_obs_points_K # the average of |E|**2
+                ma=max(Emags2) # the maximum of |E|**2
+                D=ma/av # directivity
+                #print mc, ma, av, D
+                Ds_K.append(D)
+                Es2_av_list_K.append(av)
+            y_value=4*np.mean(Ds_K)/(np.mean(Es2_max_list_Z)/np.mean(Es2_av_list_K))  
+            y_value_list.append(y_value)
+            #print    
+            #print f, distance,deltah
+            #print
+        plt.plot(freqs/1e9,y_value_list, '%s+-'%clr,label="R=%dm,$\Delta h$=%dm"%(distance,deltah))
+        output_data.append(y_value_list)
+    plt.legend(loc=4)
+    plt.xlabel(r'$\stackrel{f/GHz}{ka}$',fontsize=20,labelpad=10)
+    plt.ylabel(r"$\frac{4<D^{K}_{max}>}{<E^{Z^{2}}_{max}/E^{K^{2}}>}$")
+    plt.title("$N_{dipoles}=%d$, MC runs=%d, $a_{EUT}=%.2fm$"%(N_dipole,N_MC,a_EUT))
     #pylab.show()
     #numpy.save(r"D:\wang\python-script\new_new_results\4.10/Ds_list",data)
     fig = matplotlib.pyplot.gcf()
     fig.set_size_inches(18.5, 10.5)
-    pp = PdfPages(r'D:\HIWI\python-script\new_new_results\4.10/result.pdf')
-    pylab.savefig(pp, format='pdf',dpi=fig1.dpi, bbox_inches='tight')
+    pp = PdfPages(r'D:\HIWI\python-script\new_new_results\4.11/result_a.pdf')
+    pylab.savefig(pp, format='pdf',dpi=fig.dpi, bbox_inches='tight')
     pp.close()
     output=zip(*output_data)
-    numpy.savetxt(r"D:\HIWI\python-script\new_new_results\4.10/4.10.dat", output, fmt=['%.6f']*len(output_data))
+    numpy.savetxt(r"D:\HIWI\python-script\new_new_results\4.11/4.11a.dat", output, fmt=['%.6f']*len(output_data))

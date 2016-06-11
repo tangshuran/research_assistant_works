@@ -90,7 +90,18 @@ def calc_ds (sources, Nrepetitions,k,ophis,othetas):
         results.append(D)
         #break
     return results
-
+def remove_nan(seq):
+    not_nan=10000
+    clean_seq=[]   
+    for i,v in enumerate(seq):
+        if str(v)!="nan":
+            not_nan=i
+            clean_seq.append(v)
+        elif i<not_nan:
+            clean_seq.append(0)
+        else:
+            clean_seq.append(1)
+    return clean_seq
 def E_hertz_far (r, p, R, phi, f, t=0, epsr=1.):
     """
     Calculate E field strength of hertzian dipole(s) in the far field
@@ -421,7 +432,7 @@ def R_Zylinder (N, R,deltah):
 if __name__ == "__main__":
     import pylab
     import sys
-    
+    output_data=[]
     distance = 10  # measurement distance
     a_EUT_list=numpy.array([0.25,0.50,1.00,1.50,2.00])
     N_dipole = 10    # number of random dipoles
@@ -430,6 +441,7 @@ if __name__ == "__main__":
     f_list=numpy.array([6000,3000,1500,750,250])*1e6#[30,50,80,100,150, 200,250, 300,350, 400,450, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500])*1e6#numpy.array(range(30,301,30))*1000000#numpy.logspace(10,11,3)  # generate frequencies
     ka=31.4#kas=a_EUTs*2*pi*freqs/c # vector with k*a values (a: EUT radius)
     deval=numpy.linspace(1,8,100)
+    output_data.append(deval)
     N_obs_points=[10,10] 
     Ns=Ns_hansen_1D
     n_listen=0
@@ -482,6 +494,7 @@ if __name__ == "__main__":
         ecdfD=ECDF(Ds)
         pylab.figure(1)
         pylab.plot(deval,ecdfD(deval), '%s+-'%clr, label="ECDF (Dipoles),f=%d MHz,a=%.2f m"%(f/1e6,a_EUT))
+        output_data.append(remove_nan(ecdfD(deval)))
     #pylab.plot(deval, [FD_hertz_one_cut(d) for d in deval], label="Theoretical CDF (a=0 m)")
     #pylab.plot(deval, [FD_hertz_one_cut_costheta(d) for d in deval], label="Theoretical CDF cos(theta)(a=0 m)")
     pylab.axis([deval[0],deval[-1],0,1])
@@ -496,3 +509,5 @@ if __name__ == "__main__":
     pp = PdfPages(r'D:\HIWI\python-script\new_new_results\4.14/result_b.pdf')
     pylab.savefig(pp, format='pdf',dpi=fig1.dpi, bbox_inches='tight')
     pp.close()
+    output=zip(*output_data)
+    numpy.savetxt(r"D:\HIWI\python-script\new_new_results\4.14/4.14b.dat", output, fmt=['%.6f']*len(output_data))

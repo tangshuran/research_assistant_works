@@ -328,27 +328,39 @@ def calcEmags2(Es,phi,th):
     Emags2=numpy.array([numpy.vdot(a,a) for a in Eshv.T])  # |E|**2
 
     return Emags2
-
+def remove_nan(seq):
+    not_nan=10000
+    clean_seq=[]   
+    for i,v in enumerate(seq):
+        if str(v)!="nan":
+            not_nan=i
+            clean_seq.append(v)
+        elif i<not_nan:
+            clean_seq.append(0)
+        else:
+            clean_seq.append(1)
+    return clean_seq
 if __name__ == "__main__":
     import pylab
     import sys
-    
+    output_data=[]
     distance = 10  # measurement distance
-    a_EUT=0.2693# radius of EUT
-    N_dipole_list = [1,2,3,5,8,10,15,20]    # number of random dipoles
+    a_EUT=0.27# radius of EUT
+    N_dipole_list = [1,2,3,5,8,10,20]    # number of random dipoles
     N_obs_points=50 #number of observation points (randomly distributed) on Ring around EUT
     N_MC=1000# number of MC runs -> average over different random configurations
     f=6000*1e6#[30,50,80,100,150, 200,250, 300,350, 400,450, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500])*1e6#numpy.array(range(30,301,30))*1000000#numpy.logspace(10,11,3)  # generate frequencies
     #kas=a_EUTs*2*pi*freqs/c # vector with k*a values (a: EUT radius)
     ka=a_EUT*2*pi*f/c
     deval=numpy.linspace(1,5,100)
+    output_data.append(deval)
     Ns=Ns_hansen_1D
     n_listen=0
     fig1=pylab.figure(1)        
 
     #[palist,direc,dpnrlist,EUTlist]=load_padirec(N_dipole*N_MC)
     #print len(palist), len(direc),len(dpnrlist),len(EUTlist)
-    colors=cycle('bgrcmkwy')
+    colors=cycle('bgrcmky')
     for N_dipole,clr in zip(N_dipole_list,colors):   # loop frequencies, kas
         
         [rs,phiwinkel,theta]=R_notrand(N_obs_points, distance, theta=0.5*pi,zoffset=0)#1.5) # generate not random observation points 
@@ -380,6 +392,7 @@ if __name__ == "__main__":
         ecdfD=ECDF(Ds)
         pylab.figure(1)
         pylab.plot(deval,ecdfD(deval), '%s+-'%clr, label="ECDF (Dipoles), $N_{dipoles}=%d$"%(N_dipole))
+        output_data.append(remove_nan(ecdfD(deval)))
     #pylab.plot(deval, [FD_hertz_one_cut(d) for d in deval], label="Theoretical CDF (a=0 m)")
     #pylab.plot(deval, [FD_hertz_one_cut_costheta(d) for d in deval], label="Theoretical CDF cos(theta)(a=0 m)")
     pylab.axis([deval[0],deval[-1],0,1])
@@ -387,11 +400,12 @@ if __name__ == "__main__":
     pylab.legend(loc=4)
     pylab.xlabel("Max. Directivity D")
     pylab.ylabel("CDF")
-    pylab.title("$a_{EUT}=%.4f$, MC runs=%d, $Frequency=%d MHz$, $R=%d m$"%(a_EUT,N_MC,f/1e6,distance))
+    pylab.title("$a_{EUT}=%.2f m$, MC runs=%d, $Frequency=%d GHz$, $R=%d m$"%(a_EUT,N_MC,f/1e9,distance))
     #pylab.show()
     fig = matplotlib.pyplot.gcf()
     fig.set_size_inches(18.5, 10.5)
     pp = PdfPages(r'D:\HIWI\python-script\new_new_results\4.15/result_b.pdf')
     pylab.savefig(pp, format='pdf',dpi=fig1.dpi, bbox_inches='tight')
     pp.close()
-
+    output=zip(*output_data)
+    numpy.savetxt(r"D:\HIWI\python-script\new_new_results\4.15/4.15b.dat", output, fmt=['%.6f']*len(output_data))
