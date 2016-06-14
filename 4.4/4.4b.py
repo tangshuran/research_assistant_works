@@ -56,7 +56,36 @@ class Sources(object):
         self.angles=zip(self.thetas,self.phis)
         
 
-
+def R_new(N, a=1., theta=None, rand_a=False,zoffset=0):
+    choose_surface=numpy.random.uniform(0.0,26.0,N)
+    points=[]
+    for choice in choose_surface:
+        if choice<=3.0:
+            x=numpy.random.uniform(0.0,0.3)
+            y=0
+            z=numpy.random.uniform(0.0,0.2)
+        elif choice<=6.0:
+            x=numpy.random.uniform(0.0,0.3)
+            y=0.4
+            z=numpy.random.uniform(0.0,0.2)
+        elif choice<=10.0:
+            x=0
+            y=numpy.random.uniform(0.0,0.4)
+            z=numpy.random.uniform(0.0,0.2)
+        elif choice<=14.0:
+            x=0.3
+            y=numpy.random.uniform(0.0,0.4)
+            z=numpy.random.uniform(0.0,0.2)
+        elif choice<=20.0:
+            x=numpy.random.uniform(0.0,0.3)
+            y=numpy.random.uniform(0.0,0.4)
+            z=0
+        elif choice<=26.0:
+            x=numpy.random.uniform(0.0,0.3)
+            y=numpy.random.uniform(0.0,0.4)
+            z=0.2
+        points.append([x,y,z])
+    return numpy.array(points)
 def E_hertz_far (r, p, R, phi, f, t=0, epsr=1.):
     """
     Calculate E field strength of hertzian dipole(s) in the far field
@@ -367,7 +396,7 @@ if __name__ == "__main__":
     #print N_obs_points
     N_obs_points_list.append([100,100])
     #N_obs=N_obs_points[0]*N_obs_points[1]
-    N_MC=3    # number of MC runs -> average over different random configurations
+    N_MC=10    # number of MC runs -> average over different random configurations
     freqs=numpy.linspace(1,6,15)*1e9#freqs=numpy.array([1000000000])#,1000000000,1500000000])#range(30,301,30))*1000000#numpy.logspace(10,11,3)  # generate frequencies
     kas=a_EUT*2*pi*freqs/c # vector with k*a values (a: EUT radius)
     deval=numpy.linspace(1,10,100)
@@ -394,7 +423,7 @@ if __name__ == "__main__":
             n_listen=0
             for mc in range(N_MC): # MC loop
                 p=p_rand(N_dipole, pmax=1e-8)   # generate vector with random dipole moments
-                R=R_rand_oats(N_dipole, a=a_EUT,rand_a=False,zoffset=1)   # generate random dipole positions on EUT surface
+                R=R_new(N_dipole, a=a_EUT,rand_a=False,zoffset=1)   # generate random dipole positions on EUT surface
                 Rsum.append(numpy.array([R.T[0],R.T[1],-R.T[2]]).T[0])
                 Rsum.append(R[0])
                 Psum.append(p[0])

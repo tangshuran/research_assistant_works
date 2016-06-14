@@ -377,8 +377,8 @@ if __name__ == "__main__":
     output_data=[]
     distance = 10  # measurement distance
     a_EUT_list = [0.1,0.27,0.5,1,2]     # radius of EUT
-    N_dipole = 10    # number of random dipoles
-    N_obs=100
+    N_dipole = 50    # number of random dipoles
+    N_obs=50
     N_obs_points=N_obs#4m / 2 *pi * R
     #deltah_list=[3,3,5]
     #x=[1,2,3,4,5,6]
