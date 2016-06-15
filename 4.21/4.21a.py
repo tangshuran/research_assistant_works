@@ -66,7 +66,36 @@ class Sources(object):
         intens=sum(intensities)
         power=abs(intens)**2
         return power
-
+def R_new(N, a=1., theta=None, rand_a=False,zoffset=0):
+    choose_surface=numpy.random.uniform(0.0,26.0,N)
+    points=[]
+    for choice in choose_surface:
+        if choice<=3.0:
+            x=numpy.random.uniform(0.0,0.3)
+            y=0
+            z=numpy.random.uniform(0.0,0.2)
+        elif choice<=6.0:
+            x=numpy.random.uniform(0.0,0.3)
+            y=0.4
+            z=numpy.random.uniform(0.0,0.2)
+        elif choice<=10.0:
+            x=0
+            y=numpy.random.uniform(0.0,0.4)
+            z=numpy.random.uniform(0.0,0.2)
+        elif choice<=14.0:
+            x=0.3
+            y=numpy.random.uniform(0.0,0.4)
+            z=numpy.random.uniform(0.0,0.2)
+        elif choice<=20.0:
+            x=numpy.random.uniform(0.0,0.3)
+            y=numpy.random.uniform(0.0,0.4)
+            z=0
+        elif choice<=26.0:
+            x=numpy.random.uniform(0.0,0.3)
+            y=numpy.random.uniform(0.0,0.4)
+            z=0.2
+        points.append([x,y,z])
+    return numpy.array(points)
 def calc_ds (sources, Nrepetitions,k,ophis,othetas):
     results=[]
     for rep in range(Nrepetitions):
@@ -237,7 +266,18 @@ def R_notrand (N, a=1., theta=None, rand_a=False,zoffset=0):
                      r*numpy.cos(th)+zoffset])).T
     
     return [xyz,phi,th]
-
+def remove_nan(seq):
+    not_nan=10000
+    clean_seq=[]   
+    for i,v in enumerate(seq):
+        if str(v)!="nan":
+            not_nan=i
+            clean_seq.append(v)
+        elif i<not_nan:
+            clean_seq.append(0)
+        else:
+            clean_seq.append(1)
+    return clean_seq
 def Ns_hansen_1D(ka):
     return 4*ka+2
 
@@ -332,11 +372,11 @@ def calcEmags2(Es,phi,th):
 if __name__ == "__main__":
     import pylab
     import sys
-    
+    output_data=[]
     distance = 10  # measurement distance
     a_EUT=0.2693# radius of EUT
-    N_dipole = 10    # number of random dipoles
-    N_obs_points=40 #number of observation points (randomly distributed) on Ring around EUT
+    N_dipole = 50    # number of random dipoles
+    N_obs_points=50 #number of observation points (randomly distributed) on Ring around EUT
     N_MC=1000     # number of MC runs -> average over different random configurations
     freqs=numpy.array([1000,2000,3000,4000,5000,6000])*1e6#[30,50,80,100,150, 200,250, 300,350, 400,450, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500])*1e6#numpy.array(range(30,301,30))*1000000#numpy.logspace(10,11,3)  # generate frequencies
     kas=a_EUT*2*pi*freqs/c#kas=a_EUTs*2*pi*freqs/c # vector with k*a values (a: EUT radius)
@@ -344,7 +384,7 @@ if __name__ == "__main__":
     Ns=Ns_hansen_1D
     n_listen=0
     fig1=pylab.figure(1)        
-
+    output_data.append(deval)
     #[palist,direc,dpnrlist,EUTlist]=load_padirec(N_dipole*N_MC)
     #print len(palist), len(direc),len(dpnrlist),len(EUTlist)
     colors=cycle('bgrcmkwy')
@@ -359,7 +399,7 @@ if __name__ == "__main__":
         n_listen=0
         for mc in range(N_MC): # MC loop
             p=p_rand(N_dipole, pmax=1e-8)   # generate vector with random dipole moments
-            R=R_rand(N_dipole, a=a_EUT,rand_a=False,zoffset=0)   # generate random dipole positions on EUT surface
+            R=R_new(N_dipole, a=a_EUT,rand_a=False,zoffset=0)   # generate random dipole positions on EUT surface
             Rsum.append(R[0])
             Psum.append(p[0])
             pha=2*pi*numpy.random.random(N_dipole) # generate random phases
@@ -379,7 +419,8 @@ if __name__ == "__main__":
         sys.stdout.flush()
         ecdfD=ECDF(Ds)
         pylab.figure(1)
-        pylab.plot(deval,ecdfD(deval), '%s+-'%clr, label="ECDF (Dipoles),ka=%.2f m,f=%d MHz"%(ka,f/1e6))
+        pylab.plot(deval,ecdfD(deval), '%s+-'%clr, label="ECDF (Dipoles), ka=%.2f, f=%d GHz"%(ka,f/1e9))
+        output_data.append(remove_nan(ecdfD(deval)))
     #pylab.plot(deval, [FD_hertz_one_cut(d) for d in deval], label="Theoretical CDF (a=0 m)")
     #pylab.plot(deval, [FD_hertz_one_cut_costheta(d) for d in deval], label="Theoretical CDF cos(theta)(a=0 m)")
     pylab.axis([deval[0],deval[-1],0,1])
@@ -394,3 +435,5 @@ if __name__ == "__main__":
     pp = PdfPages(r'D:\HIWI\python-script\new_new_results\4.21/result_a.pdf')
     pylab.savefig(pp, format='pdf',dpi=fig1.dpi, bbox_inches='tight')
     pp.close()
+    output=zip(*output_data)
+    numpy.savetxt(r"D:\HIWI\python-script\new_new_results\4.21/4.21a.dat", output, fmt=['%.6f']*len(output_data))

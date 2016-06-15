@@ -131,7 +131,18 @@ def E_hertz_far (r, p, R, phi, f, t=0, epsr=1.):
     
     return E
 
-
+def remove_nan(seq):
+    not_nan=10000
+    clean_seq=[]   
+    for i,v in enumerate(seq):
+        if str(v)!="nan":
+            not_nan=i
+            clean_seq.append(v)
+        elif i<not_nan:
+            clean_seq.append(0)
+        else:
+            clean_seq.append(1)
+    return clean_seq
 def car2sph(xyz):
     ptsnew = numpy.zeros(xyz.shape)
     xy = xyz[:,0]**2 + xyz[:,1]**2
@@ -196,7 +207,36 @@ def p_rand (N, pmax=1., fix_amplitude=None):
     #print xyz
     
     return xyz
-
+def R_new(N, a=1., theta=None, rand_a=False,zoffset=0):
+    choose_surface=numpy.random.uniform(0.0,26.0,N)
+    points=[]
+    for choice in choose_surface:
+        if choice<=3.0:
+            x=numpy.random.uniform(0.0,0.3)
+            y=0
+            z=numpy.random.uniform(0.0,0.2)
+        elif choice<=6.0:
+            x=numpy.random.uniform(0.0,0.3)
+            y=0.4
+            z=numpy.random.uniform(0.0,0.2)
+        elif choice<=10.0:
+            x=0
+            y=numpy.random.uniform(0.0,0.4)
+            z=numpy.random.uniform(0.0,0.2)
+        elif choice<=14.0:
+            x=0.3
+            y=numpy.random.uniform(0.0,0.4)
+            z=numpy.random.uniform(0.0,0.2)
+        elif choice<=20.0:
+            x=numpy.random.uniform(0.0,0.3)
+            y=numpy.random.uniform(0.0,0.4)
+            z=0
+        elif choice<=26.0:
+            x=numpy.random.uniform(0.0,0.3)
+            y=numpy.random.uniform(0.0,0.4)
+            z=0.2
+        points.append([x,y,z])
+    return numpy.array(points)
 def R_rand (N, a=1., theta=None, rand_a=False,zoffset=0):
     """
     returns array of N random vectors (Rx,Ry,Rz)
@@ -335,15 +375,16 @@ def calcEmags2(Es,phi,th):
 if __name__ == "__main__":
     import pylab
     import sys
-    
+    output_data=[]
     distance = 10  # measurement distance
     a_EUT=0.2693# radius of EUT
-    N_dipole = 30    # number of random dipoles
-    N_obs_points=40 #number of observation points (randomly distributed) on Ring around EUT
+    N_dipole = 50    # number of random dipoles
+    N_obs_points=50 #number of observation points (randomly distributed) on Ring around EUT
     N_MC=1000     # number of MC runs -> average over different random configurations
     freqs=numpy.array(numpy.linspace(1000,6000,51))*1e6#[30,50,80,100,150, 200,250, 300,350, 400,450, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500])*1e6#numpy.array(range(30,301,30))*1000000#numpy.logspace(10,11,3)  # generate frequencies
     kas=a_EUT*2*pi*freqs/c#kas=a_EUTs*2*pi*freqs/c # vector with k*a values (a: EUT radius)
     deval=numpy.linspace(1,5,100)
+    output_data.append(freqs/1e9)
     Ns=Ns_hansen_1D
     n_listen=0
     fig1=pylab.figure(1)        
@@ -362,7 +403,7 @@ if __name__ == "__main__":
         n_listen=0
         for mc in range(N_MC): # MC loop
             p=p_rand(N_dipole, pmax=1e-8)   # generate vector with random dipole moments
-            R=R_rand(N_dipole, a=a_EUT,rand_a=False,zoffset=0)   # generate random dipole positions on EUT surface
+            R=R_new(N_dipole, a=a_EUT,rand_a=False,zoffset=0)   # generate random dipole positions on EUT surface
             Rsum.append(R[0])
             Psum.append(p[0])
             pha=2*pi*numpy.random.random(N_dipole) # generate random phases
@@ -381,22 +422,23 @@ if __name__ == "__main__":
         print f/1e6
         #sys.stdout.flush()
         ecdfD=ECDF(Ds)
-    x=[1,2,3.5,6]
+    x=[1,2,3,4,5,6]
     #x=[r'$\stackrel{500}{%.1f}$'%(a_EUT*2*pi*500*1e6/c),r'$\stackrel{2000}{%.1f}$'%(a_EUT*2*pi*2000*1e6/c),r'$\stackrel{3500}{%.1f}$'%(a_EUT*2*pi*3500*1e6/c),r'$\stackrel{6000}{%.1f}$'%(a_EUT*2*pi*6000*1e6/c)]   
     #pylab.plot(deval, [FD_hertz_one_cut(d) for d in deval], label="Theoretical CDF (a=0 m)")
     #pylab.plot(deval, [FD_hertz_one_cut_costheta(d) for d in deval], label="Theoretical CDF cos(theta)(a=0 m)")
-    labels = [r'$\stackrel{1}{%.1f}$'%(a_EUT*2*pi*1000*1e6/c),r'$\stackrel{2}{%.1f}$'%(a_EUT*2*pi*2000*1e6/c),r'$\stackrel{3.5}{%.1f}$'%(a_EUT*2*pi*3500*1e6/c),r'$\stackrel{6}{%.1f}$'%(a_EUT*2*pi*6000*1e6/c)]
+    labels = [r'$\stackrel{1}{%.1f}$'%(a_EUT*2*pi*1000*1e6/c),r'$\stackrel{2}{%.1f}$'%(a_EUT*2*pi*2000*1e6/c),r'$\stackrel{3}{%.1f}$'%(a_EUT*2*pi*3000*1e6/c),r'$\stackrel{4}{%.1f}$'%(a_EUT*2*pi*4000*1e6/c),r'$\stackrel{5}{%.1f}$'%(a_EUT*2*pi*5000*1e6/c),r'$\stackrel{6}{%.1f}$'%(a_EUT*2*pi*6000*1e6/c)]
     fig, ax = plt.subplots()
     fig.canvas.draw()
     
     ax.xaxis.set_ticks(x)
     plt.plot(freqs/1e9,D_max_list, 'r+-')
+    output_data.append(D_max_list)
     ax.set_xticklabels(labels,verticalalignment="top")
     ax.set_ylim((2.5,4))
     #pylab.axis([freqs[0]/1e6,freqs[-1]/1e6,1,4])
     plt.grid()
 #    plt.legend(loc=4)
-    plt.xlabel(r'$\stackrel{f/GHz}{ka}$')
+    plt.xlabel(r'$\stackrel{f/GHz}{ka}$',fontsize=14)
     plt.ylabel("$<D_{max}^{R}>$")
     plt.title("$N_{dipoles}=%d$, MC runs=%d, $a_{EUT}=%.4fm$, $R=%dm$"%(N_dipole,N_MC,a_EUT,distance))
    # plt.show()
@@ -405,4 +447,6 @@ if __name__ == "__main__":
     pp = PdfPages(r'D:\HIWI\python-script\new_new_results\4.18/result_a.pdf')
     pylab.savefig(pp, format='pdf',dpi=fig1.dpi, bbox_inches='tight')
     pp.close()
+    output=zip(*output_data)
+    numpy.savetxt(r"D:\HIWI\python-script\new_new_results\4.18/4.18a.dat", output, fmt=['%.6f']*len(output_data))
 

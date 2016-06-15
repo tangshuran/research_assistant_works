@@ -13,10 +13,10 @@ from cmath import *
 import cmath
 import cPickle
 from matplotlib import rc, rcParams
-import matplotlib
 from matplotlib.backends.backend_pdf import PdfPages
 import pylab
 import sys
+import matplotlib
 c=299792458.
 pi=numpy.pi
 mu0=4*pi*1e-7
@@ -237,36 +237,7 @@ def R_notrand (N, a=1., theta=None, rand_a=False,zoffset=0):
                      r*numpy.cos(th)+zoffset])).T
     
     return [xyz,phi,th]
-def R_new(N, a=1., theta=None, rand_a=False,zoffset=0):
-    choose_surface=numpy.random.uniform(0.0,26.0,N)
-    points=[]
-    for choice in choose_surface:
-        if choice<=3.0:
-            x=numpy.random.uniform(0.0,0.3)
-            y=0
-            z=numpy.random.uniform(0.0,0.2)
-        elif choice<=6.0:
-            x=numpy.random.uniform(0.0,0.3)
-            y=0.4
-            z=numpy.random.uniform(0.0,0.2)
-        elif choice<=10.0:
-            x=0
-            y=numpy.random.uniform(0.0,0.4)
-            z=numpy.random.uniform(0.0,0.2)
-        elif choice<=14.0:
-            x=0.3
-            y=numpy.random.uniform(0.0,0.4)
-            z=numpy.random.uniform(0.0,0.2)
-        elif choice<=20.0:
-            x=numpy.random.uniform(0.0,0.3)
-            y=numpy.random.uniform(0.0,0.4)
-            z=0
-        elif choice<=26.0:
-            x=numpy.random.uniform(0.0,0.3)
-            y=numpy.random.uniform(0.0,0.4)
-            z=0.2
-        points.append([x,y,z])
-    return numpy.array(points)
+
 def Ns_hansen_1D(ka):
     return 4*ka+2
 
@@ -357,85 +328,71 @@ def calcEmags2(Es,phi,th):
     Emags2=numpy.array([numpy.vdot(a,a) for a in Eshv.T])  # |E|**2
 
     return Emags2
-def remove_nan(seq):
-    not_nan=10000
-    clean_seq=[]   
-    for i,v in enumerate(seq):
-        if str(v)!="nan":
-            not_nan=i
-            clean_seq.append(v)
-        elif i<not_nan:
-            clean_seq.append(0)
-        else:
-            clean_seq.append(1)
-    return clean_seq
+
 if __name__ == "__main__":
     import pylab
     import sys
-    output_data=[]
+    
     distance = 10  # measurement distance
     a_EUT=0.2693# radius of EUT
-    N_dipole_list = [1,2,3,5,8,10,15,20]    # number of random dipoles
-    N_obs_points=50 #number of observation points (randomly distributed) on Ring around EUT
-    N_MC=1000# number of MC runs -> average over different random configurations
-    f=6000*1e6#[30,50,80,100,150, 200,250, 300,350, 400,450, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500])*1e6#numpy.array(range(30,301,30))*1000000#numpy.logspace(10,11,3)  # generate frequencies
-    #kas=a_EUTs*2*pi*freqs/c # vector with k*a values (a: EUT radius)
-    ka=a_EUT*2*pi*f/c
+    N_dipole = 50    # number of random dipoles
+    N_obs_points_list=numpy.linspace(1,30,30)#number of observation points (randomly distributed) on Ring around EUT
+    N_MC=1000     # number of MC runs -> average over different random configurations
+    freqs=numpy.array([1000,2000,3000,4000,5000,6000])*1e6#[30,50,80,100,150, 200,250, 300,350, 400,450, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500])*1e6#numpy.array(range(30,301,30))*1000000#numpy.logspace(10,11,3)  # generate frequencies
+    kas=a_EUT*2*pi*freqs/c#kas=a_EUTs*2*pi*freqs/c # vector with k*a values (a: EUT radius)
     deval=numpy.linspace(1,5,100)
     Ns=Ns_hansen_1D
     n_listen=0
     fig1=pylab.figure(1)        
-    output_data.append(deval)
+
     #[palist,direc,dpnrlist,EUTlist]=load_padirec(N_dipole*N_MC)
     #print len(palist), len(direc),len(dpnrlist),len(EUTlist)
-    colors=cycle('bgrcmky')
-    for N_dipole,clr in zip(N_dipole_list,colors):   # loop frequencies, kas
-        
-        [rs,phiwinkel,theta]=R_notrand(N_obs_points, distance, theta=0.5*pi,zoffset=0)#1.5) # generate not random observation points 
-        Ds=[] # to store the directivities of the MC runs at this freq
-        Eslist=[]
-        Rsum=[]
-        Psum=[]
-        n_listen=0
-        for mc in range(N_MC): # MC loop
-            p=p_rand(N_dipole, pmax=1e-8)   # generate vector with random dipole moments
-            R=R_new(N_dipole, a=a_EUT,rand_a=False,zoffset=0)   # generate random dipole positions on EUT surface
-            Rsum.append(R[0])
-            Psum.append(p[0])
-            pha=2*pi*numpy.random.random(N_dipole) # generate random phases
-            Es=numpy.array([E_hertz_far(r, p, R, pha, f, t=0, epsr=1.) for r in rs]) # calculate sum E-fields at obsevation points
-            Emags2=abs(numpy.array([numpy.dot(a,a) for a in Es]))     
-            av=sum(Emags2)/N_obs_points # the average of |E|**2
-            ma=max(Emags2) # the maximum of |E|**2
-            D=ma/av # directivity
-            print mc, ma, av, D
-            Ds.append(D)
-            Eslist.append(Es)
-             
-        ED=EDmax_hansen(ka, mu=1., Ns=Ns)
-        print    
-        print f, ka, sum(Ds)/N_MC, ED
-        print
-        sys.stdout.flush()
-        ecdfD=ECDF(Ds)
+    colors=cycle('bgrcmkwy')
+    
+    for f,ka,clr in zip(freqs,kas,colors):
+        D_max_list=[]# loop frequencies, kas
+        for N_obs_points in N_obs_points_list:
+            [rs,phiwinkel,theta]=R_notrand(N_obs_points, distance, theta=0.5*pi,zoffset=0)#1.5) # generate not random observation points 
+            Ds=[] # to store the directivities of the MC runs at this freq
+            Eslist=[]
+            Rsum=[]
+            Psum=[]
+            n_listen=0
+            for mc in range(N_MC): # MC loop
+                p=p_rand(N_dipole, pmax=1e-8)   # generate vector with random dipole moments
+                R=R_rand(N_dipole, a=a_EUT,rand_a=False,zoffset=0)   # generate random dipole positions on EUT surface
+                Rsum.append(R[0])
+                Psum.append(p[0])
+                pha=2*pi*numpy.random.random(N_dipole) # generate random phases
+                Es=numpy.array([E_hertz_far(r, p, R, pha, f, t=0, epsr=1.) for r in rs]) # calculate sum E-fields at obsevation points
+                Emags2=abs(numpy.array([numpy.dot(a,a) for a in Es]))     
+                av=sum(Emags2)/N_obs_points # the average of |E|**2
+                ma=max(Emags2) # the maximum of |E|**2
+                D=ma/av # directivity
+                #print mc, ma, av, D
+                Ds.append(D)
+                Eslist.append(Es)
+            D_max_list.append(numpy.mean(Ds))
+            #ED=EDmax_hansen(ka, mu=1., Ns=Ns)
+        # print    
+            #print f, ka, sum(Ds)/N_MC, ED
+            print f
+            #sys.stdout.flush()
+            ecdfD=ECDF(Ds)
+            
+        #pylab.plot(deval, [FD_hertz_one_cut(d) for d in deval], label="Theoretical CDF (a=0 m)")
+        #pylab.plot(deval, [FD_hertz_one_cut_costheta(d) for d in deval], label="Theoretical CDF cos(theta)(a=0 m)")
         pylab.figure(1)
-        pylab.plot(deval,ecdfD(deval), '%s+-'%clr, label="ECDF (Dipoles), $N_{dipoles}=%d $"%(N_dipole))
-        output_data.append(remove_nan(ecdfD(deval)))
-    #pylab.plot(deval, [FD_hertz_one_cut(d) for d in deval], label="Theoretical CDF (a=0 m)")
-    #pylab.plot(deval, [FD_hertz_one_cut_costheta(d) for d in deval], label="Theoretical CDF cos(theta)(a=0 m)")
-    pylab.axis([deval[0],deval[-1],0,1])
+        pylab.plot(N_obs_points_list,D_max_list, '%s+-'%clr, label="f= %dGHz"%(f/1e9))
+    pylab.axis([N_obs_points_list[0],N_obs_points_list[-1],1,4])
     pylab.grid()
     pylab.legend(loc=4)
-    pylab.xlabel("Max. Directivity D")
-    pylab.ylabel("CDF")
-    pylab.title("$a_{EUT}=%.4fm$, MC runs=%d, $Frequency=%d GHz$, $R=%d m$,$N_{obs}=%d$"%(a_EUT,N_MC,f/1e9,distance,N_obs_points))
-   # pylab.show()
+    pylab.xlabel("$N_{dipoles}$")
+    pylab.ylabel("$<D_{max}^{R}>$")
+    pylab.title(" MC runs=%d, $a_{EUT}=%.4fm$, $R=%dm$,$N_{dipole}=%d$"%(N_MC,a_EUT,distance,N_dipole))
+    #pylab.show()
     fig = matplotlib.pyplot.gcf()
     fig.set_size_inches(18.5, 10.5)
-    pp = PdfPages(r'D:\HIWI\python-script\new_new_results\4.21/result_b.pdf')
+    pp = PdfPages(r'D:\HIWI\python-script\new_new_results\4.19/result_b.pdf')
     pylab.savefig(pp, format='pdf',dpi=fig1.dpi, bbox_inches='tight')
     pp.close()
-    output=zip(*output_data)
-    numpy.savetxt(r"D:\HIWI\python-script\new_new_results\4.21/4.21b.dat", output, fmt=['%.6f']*len(output_data))
-
-
