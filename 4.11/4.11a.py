@@ -58,8 +58,9 @@ class Sources(object):
         
 
 def R_new(N, a=1., theta=None, rand_a=False,zoffset=0):
-    choose_surface=numpy.random.uniform(0.0,26.0,N)
+    choose_surface=numpy.random.uniform(0.0,26.56548668,N)
     points=[]
+    alpha=2*pi*numpy.random.random()
     for choice in choose_surface:
         if choice<=3.0:
             x=numpy.random.uniform(0.0,0.3)
@@ -85,6 +86,10 @@ def R_new(N, a=1., theta=None, rand_a=False,zoffset=0):
             x=numpy.random.uniform(0.0,0.3)
             y=numpy.random.uniform(0.0,0.4)
             z=0.2
+        elif choice<=26.56548668:
+                x=0.3+numpy.random.uniform(0.0,0.7)
+                y=0.0026+0.0009*cos(alpha)
+                z=0.197+0.0009*sin(alpha)
         points.append([x,y,z])
     return numpy.array(points)
 def E_hertz_far (r, p, R, phi, f, t=0, epsr=1.):

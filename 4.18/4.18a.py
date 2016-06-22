@@ -208,8 +208,9 @@ def p_rand (N, pmax=1., fix_amplitude=None):
     
     return xyz
 def R_new(N, a=1., theta=None, rand_a=False,zoffset=0):
-    choose_surface=numpy.random.uniform(0.0,26.0,N)
+    choose_surface=numpy.random.uniform(0.0,26.56548668,N)
     points=[]
+    alpha=2*pi*numpy.random.random()
     for choice in choose_surface:
         if choice<=3.0:
             x=numpy.random.uniform(0.0,0.3)
@@ -235,6 +236,10 @@ def R_new(N, a=1., theta=None, rand_a=False,zoffset=0):
             x=numpy.random.uniform(0.0,0.3)
             y=numpy.random.uniform(0.0,0.4)
             z=0.2
+        elif choice<=26.56548668:
+                x=0.3+numpy.random.uniform(0.0,0.7)
+                y=0.0026+0.0009*cos(alpha)
+                z=0.197+0.0009*sin(alpha)
         points.append([x,y,z])
     return numpy.array(points)
 def R_rand (N, a=1., theta=None, rand_a=False,zoffset=0):
@@ -380,7 +385,7 @@ if __name__ == "__main__":
     a_EUT=0.2693# radius of EUT
     N_dipole = 50    # number of random dipoles
     N_obs_points=50 #number of observation points (randomly distributed) on Ring around EUT
-    N_MC=1000     # number of MC runs -> average over different random configurations
+    N_MC=5     # number of MC runs -> average over different random configurations
     freqs=numpy.array(numpy.linspace(1000,6000,51))*1e6#[30,50,80,100,150, 200,250, 300,350, 400,450, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500])*1e6#numpy.array(range(30,301,30))*1000000#numpy.logspace(10,11,3)  # generate frequencies
     kas=a_EUT*2*pi*freqs/c#kas=a_EUTs*2*pi*freqs/c # vector with k*a values (a: EUT radius)
     deval=numpy.linspace(1,5,100)
@@ -444,9 +449,9 @@ if __name__ == "__main__":
    # plt.show()
     fig = matplotlib.pyplot.gcf()
     fig.set_size_inches(18.5, 10.5)
-    pp = PdfPages(r'D:\HIWI\python-script\new_new_results\4.18/result_a.pdf')
+    pp = PdfPages(r'D:\HIWI\python-script\new_new_results\4.18/test.pdf')
     pylab.savefig(pp, format='pdf',dpi=fig1.dpi, bbox_inches='tight')
     pp.close()
     output=zip(*output_data)
-    numpy.savetxt(r"D:\HIWI\python-script\new_new_results\4.18/4.18a.dat", output, fmt=['%.6f']*len(output_data))
+    numpy.savetxt(r"D:\HIWI\python-script\new_new_results\4.18/test.dat", output, fmt=['%.6f']*len(output_data))
 

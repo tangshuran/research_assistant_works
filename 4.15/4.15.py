@@ -90,7 +90,36 @@ def calc_ds (sources, Nrepetitions,k,ophis,othetas):
         results.append(D)
         #break
     return results
-
+def R_new(N, a=1., theta=None, rand_a=False,zoffset=0):
+    choose_surface=numpy.random.uniform(0.0,26.0,N)
+    points=[]
+    for choice in choose_surface:
+        if choice<=3.0:
+            x=numpy.random.uniform(0.0,0.3)
+            y=0
+            z=numpy.random.uniform(0.0,0.2)
+        elif choice<=6.0:
+            x=numpy.random.uniform(0.0,0.3)
+            y=0.4
+            z=numpy.random.uniform(0.0,0.2)
+        elif choice<=10.0:
+            x=0
+            y=numpy.random.uniform(0.0,0.4)
+            z=numpy.random.uniform(0.0,0.2)
+        elif choice<=14.0:
+            x=0.3
+            y=numpy.random.uniform(0.0,0.4)
+            z=numpy.random.uniform(0.0,0.2)
+        elif choice<=20.0:
+            x=numpy.random.uniform(0.0,0.3)
+            y=numpy.random.uniform(0.0,0.4)
+            z=0
+        elif choice<=26.0:
+            x=numpy.random.uniform(0.0,0.3)
+            y=numpy.random.uniform(0.0,0.4)
+            z=0.2
+        points.append([x,y,z])
+    return numpy.array(points)
 def E_hertz_far (r, p, R, phi, f, t=0, epsr=1.):
     """
     Calculate E field strength of hertzian dipole(s) in the far field
@@ -371,7 +400,7 @@ if __name__ == "__main__":
         n_listen=0
         for mc in range(N_MC): # MC loop
             p=p_rand(N_dipole, pmax=1e-8)   # generate vector with random dipole moments
-            R=R_rand(N_dipole, a=a_EUT,rand_a=False,zoffset=0)   # generate random dipole positions on EUT surface
+            R=R_new(N_dipole, a=a_EUT,rand_a=False,zoffset=0)   # generate random dipole positions on EUT surface
             Rsum.append(R[0])
             Psum.append(p[0])
             pha=2*pi*numpy.random.random(N_dipole) # generate random phases
@@ -400,7 +429,7 @@ if __name__ == "__main__":
     pylab.legend(loc=4)
     pylab.xlabel("Max. Directivity D")
     pylab.ylabel("CDF")
-    pylab.title("$a_{EUT}=%.2f m$, MC runs=%d, $Frequency=%d GHz$, $R=%d m$"%(a_EUT,N_MC,f/1e9,distance))
+    pylab.title("$a_{EUT}=%.2f m$, MC runs=%d, $Frequency=%d GHz$, $R=%d m$,$N_{obs}=%d$"%(a_EUT,N_MC,f/1e9,distance,N_obs_points))
     #pylab.show()
     fig = matplotlib.pyplot.gcf()
     fig.set_size_inches(18.5, 10.5)
